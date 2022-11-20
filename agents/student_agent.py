@@ -1,4 +1,5 @@
 # Student agent: Add your own agent here
+import numpy as np
 from agents.agent import Agent
 from store import register_agent
 import sys
@@ -36,5 +37,40 @@ class StudentAgent(Agent):
 
         Please check the sample implementation in agents/random_agent.py or agents/human_agent.py for more details.
         """
+
+        # Code here
+
+        # Gets the Y element from my_pos as that is the left and right variable
+        max_left = my_pos[1] - max_step
+        max_right = my_pos[1] + max_step
+        max_up = my_pos[1] - max_step
+        max_down = my_pos[0] + max_step
+
+        # Get the size of the grid then subtract one as starting from 0
+        grid_size = len(chess_board) - 1
+
+        if max_up < 0:
+            max_up = 0
+
+        if max_down > grid_size:
+            max_down = grid_size
+
+        if max_left < 0:
+            max_left = 0
+
+        if max_right > grid_size:
+            max_right = grid_size
+
+        y_pos = np.random.randint(max_left, max_right)
+
+        x_pos = max_step - y_pos
+
+        new_pos = (x_pos, y_pos)
+
+        my_pos = new_pos
+
+        # Randomly select int for direction
+        dir = np.random.randint(0, 4)
+
         # dummy return
-        return my_pos, self.dir_map["u"]
+        return my_pos, dir
