@@ -40,37 +40,45 @@ class StudentAgent(Agent):
 
         # Code here
 
-        # Gets the Y element from my_pos as that is the left and right variable
-        max_left = my_pos[1] - max_step
-        max_right = my_pos[1] + max_step
-        max_up = my_pos[1] - max_step
-        max_down = my_pos[0] + max_step
-
-        # Get the size of the grid then subtract one as starting from 0
-        grid_size = len(chess_board) - 1
-
-        if max_up < 0:
-            max_up = 0
-
-        if max_down > grid_size:
-            max_down = grid_size
-
-        if max_left < 0:
-            max_left = 0
-
-        if max_right > grid_size:
-            max_right = grid_size
-
-        y_pos = np.random.randint(max_left, max_right)
-
-        x_pos = max_step - y_pos
-
-        new_pos = (x_pos, y_pos)
-
-        my_pos = new_pos
-
-        # Randomly select int for direction
-        dir = np.random.randint(0, 4)
-
         # dummy return
         return my_pos, dir
+
+    def get_steps(self, chess_board, my_pos, adv_pos, max_steps):
+        """
+        Find all steps the agent can reach.
+
+        Parameters
+        ----------
+        my_pos: tuple
+            Position the agent starts at
+        adv_pos: tuple
+            Position the agent will move too
+        """
+        # Size of the board, assume always square
+        board_size = len(chess_board[0])
+
+        # List of valid positions to return
+        steps_allowed = []
+
+        # Temporary positions
+        adv_row = adv_pos[0]
+        adv_col = adv_pos[1]
+        
+        # Iterate through rows
+        for i in range(board_size):
+            # Iterate through columns
+            for j in range(board_size):
+                # List of directions where a barrier could be valid
+                border_dir = []
+                if i < adv_row:
+                    border_dir.append("r")
+                elif i > adv_row:
+                    border_dir.append("l")
+                if j < adv_col:
+                    border_dir.append("u")
+                elif j > adv_col:
+                    border_dir.append("d")
+                for dir in border_dir:
+                    if self.check_valid_step(chess_board, my_pos, (i, j), adv_pos, dir, max_steps):
+                        steps_allowed.append(tuple([i, j, self.dir_map[dir]]))
+        return steps_allowed
