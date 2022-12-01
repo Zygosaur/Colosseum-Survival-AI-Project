@@ -168,9 +168,9 @@ class StudentAgent(Agent):
 
         Parameters
         ----------
-        my_pos: tuple
+        my_pos : tuple
             Position the agent starts at
-        adv_pos: tuple
+        adv_pos : tuple
             Position the agent will move too
         """
         # Size of the board, assume always square
