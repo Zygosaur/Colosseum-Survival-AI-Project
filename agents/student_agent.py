@@ -162,3 +162,43 @@ class StudentAgent(Agent):
     def heuristicsDecisions(chessboard, my_pos, adv_pos):
         heuristic=0
         return heuristic
+
+    def get_steps(self, chess_board, my_pos, adv_pos, max_steps):
+        """
+        Find all steps the agent can reach.
+
+        Parameters
+        ----------
+        my_pos: tuple
+            Position the agent starts at
+        adv_pos: tuple
+            Position the agent will move too
+        """
+        # Size of the board, assume always square
+        board_size = len(chess_board[0])
+
+        # List of valid positions to return
+        steps_allowed = []
+
+        # Temporary positions
+        adv_row = adv_pos[0]
+        adv_col = adv_pos[1]
+
+        # Iterate through rows
+        for i in range(board_size):
+            # Iterate through columns
+            for j in range(board_size):
+                # List of directions where a barrier could be valid
+                border_dir = []
+                if i < adv_row:
+                    border_dir.append("r")
+                elif i > adv_row:
+                    border_dir.append("l")
+                if j < adv_col:
+                    border_dir.append("u")
+                elif j > adv_col:
+                    border_dir.append("d")
+                for dir in border_dir:
+                    if self.check_valid_step(chess_board, my_pos, (i, j), adv_pos, dir, max_steps):
+                        steps_allowed.append(tuple([i, j, self.dir_map[dir]]))
+        return steps_allowed
