@@ -1,4 +1,5 @@
 # Student agent: Add your own agent here
+import numpy as np
 from agents.agent import Agent
 from store import register_agent
 import sys
@@ -36,5 +37,48 @@ class StudentAgent(Agent):
 
         Please check the sample implementation in agents/random_agent.py or agents/human_agent.py for more details.
         """
+
+        # Code here
+
         # dummy return
-        return my_pos, self.dir_map["u"]
+        return my_pos, dir
+
+    def get_steps(self, chess_board, my_pos, adv_pos, max_steps):
+        """
+        Find all steps the agent can reach.
+
+        Parameters
+        ----------
+        my_pos: tuple
+            Position the agent starts at
+        adv_pos: tuple
+            Position the agent will move too
+        """
+        # Size of the board, assume always square
+        board_size = len(chess_board[0])
+
+        # List of valid positions to return
+        steps_allowed = []
+
+        # Temporary positions
+        adv_row = adv_pos[0]
+        adv_col = adv_pos[1]
+        
+        # Iterate through rows
+        for i in range(board_size):
+            # Iterate through columns
+            for j in range(board_size):
+                # List of directions where a barrier could be valid
+                border_dir = []
+                if i < adv_row:
+                    border_dir.append("r")
+                elif i > adv_row:
+                    border_dir.append("l")
+                if j < adv_col:
+                    border_dir.append("u")
+                elif j > adv_col:
+                    border_dir.append("d")
+                for dir in border_dir:
+                    if self.check_valid_step(chess_board, my_pos, (i, j), adv_pos, dir, max_steps):
+                        steps_allowed.append(tuple([i, j, self.dir_map[dir]]))
+        return steps_allowed
