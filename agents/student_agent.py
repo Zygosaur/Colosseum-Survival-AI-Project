@@ -41,7 +41,6 @@ class StudentAgent(Agent):
 
         # Code here
 
-
         # dummy return
         return my_pos, dir
 
