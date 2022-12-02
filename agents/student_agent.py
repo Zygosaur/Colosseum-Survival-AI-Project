@@ -158,7 +158,7 @@ class StudentAgent(Agent):
 
         return is_reached
 
-    def heuristic_decisions(chess_board, my_pos, adv_pos):
+    def heuristic_decisions(self, chess_board, my_pos, adv_pos):
 
         # Determines if the game has ended
         if self.check_endgame(chess_board, my_pos, adv_pos)[0] == True:
