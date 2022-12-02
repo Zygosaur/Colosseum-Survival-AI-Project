@@ -169,9 +169,9 @@ class StudentAgent(Agent):
         Parameters
         ----------
         my_pos : tuple
-            Position the agent starts at
+            Position of the agent
         adv_pos : tuple
-            Position the agent will move too
+            Position of the adversary
         """
         # Size of the board, assume always square
         board_size = len(chess_board[0])
@@ -201,3 +201,89 @@ class StudentAgent(Agent):
                     if self.check_valid_step(chess_board, my_pos, (i, j), adv_pos, dir, max_steps):
                         steps_allowed.append(tuple([i, j, self.dir_map[dir]]))
         return steps_allowed
+
+    def mini_max(self, board, my_pos, adv_pos, depth, max_depth, max_reached, max_step, alpha, beta, score_lim):
+        """
+        Implimentation of minimax
+
+        Paramaters
+        ----------
+        my_pos : tuple
+            Position of the agent
+        adv_pos : tuple
+            Position of the adversary
+        depth : int
+            Depth
+        max_depth : int
+            Maximum depth
+        max_reached : bool
+            Stop from searching forever
+        max_step : int
+            Maximum number of steps that can be moved
+        alpha :
+            Alpha for mini_max algorithm
+        beta :
+            Beta for mini_max algorithm
+        score_lim : int
+            Limit so that mini_max finishes
+        """
+        # The mini_max score
+        score = score_lim - self.evaluate(board, my_pos, adv_pos)
+        
+        # Has the game been won
+        end = self.check_endgame(board, my_pos, adv_pos)
+
+        # Terminal
+        if depth == max_depth:
+            return score
+
+        if end[0]:
+            my_score = end[1]
+            adv_score = end[2]
+            if my_score > adv_score and max_reached:
+                return score_lim
+            elif my_score > adv_score and not max_reached:
+                return -score_lim
+            elif my_score < adv_score and max_reached:
+                return -score_lim
+            elif my_score < adv_score and not max_reached:
+                return score_lim
+            else:
+                return 0
+
+        if (max_reached):
+            best = -score_lim
+
+            steps = self.get_steps(board, my_pos, adv_pos, max_step)
+            for step in steps:
+                board[step[0], step[1], step[2]] = True
+
+                best = max(best, self.mini_max(board, not max_reached, (step[0], step[1]), adv_pos, (depth + 1), max_depth, max_step))
+
+                board[step[0], step[1], step[2]] = False
+
+                # Prune
+                alpha = max(alpha, best)
+                if beta <= alpha:
+                    break
+
+            return best
+
+        else:
+            best = score_lim
+
+            steps = self.get_steps(board, my_pos, adv_pos, max_step)
+            for step in steps:
+                board[step[0], step[1], step[2]] = True
+
+                best = min(best, self.minimax(board, not max_reached, (step[0], step[1]), adv_pos, depth+1,
+                                              max_depth, max_step, alpha, beta))
+
+                board[step[0], step[1], step[2]] = False
+
+                # Prune
+                beta = min(beta, best)
+                if beta <= alpha:
+                    break
+
+            return best
