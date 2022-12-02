@@ -3,7 +3,6 @@ import numpy as np
 from agents.agent import Agent
 from store import register_agent
 import sys
-import logging
 
 
 @register_agent("student_agent")
