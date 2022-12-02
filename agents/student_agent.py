@@ -158,8 +158,27 @@ class StudentAgent(Agent):
 
         return is_reached
 
-    def heuristicsDecisions(chessboard, my_pos, adv_pos):
-        heuristic=0
+    def heuristic_decisions(chess_board, my_pos, adv_pos):
+
+        # Determines if the game has ended
+        if self.check_endgame(chess_board, my_pos, adv_pos)[0] == True:
+            return -10000
+        
+        # Finds the distance between the my_pos and adv_pos
+        x = abs(adv_pos[0] - my_pos[0])
+        y = abs(adv_pos[0] - my_pos[1])
+        heuristic = x + y
+
+        # Checks the number of barriers around our current position
+        # If a box is forming around us, return 10000
+        barriers_around = 0
+        for dir in range(4):
+            if chess_board[my_pos[0],my_pos[1],dir]:
+                barriers_around += 1
+        if barriers_around >=2:   
+            return 10000       
+        
+
         return heuristic
 
     def get_steps(self, chess_board, my_pos, adv_pos, max_steps):
