@@ -195,21 +195,22 @@ class StudentAgent(Agent):
         # Determines if the game has ended
         if self.check_endgame(chess_board, my_pos, adv_pos)[0]:
             return -9999
-        
-
-        # Checks the number of barriers around our current position
-        # If there are 3 barriers around us, return 9999
-        barriers_around = 0
-        for dir in range(4):
-            if chess_board[my_pos[0],my_pos[1],dir]== True:
-                barriers_around += 1
-        if barriers_around >=3:   
-            return 9999    
 
         # Finds the Manhattan distance between the my_pos and adv_pos
         x = abs(adv_pos[0] - my_pos[0])
         y = abs(adv_pos[0] - my_pos[1])
         heuristic = x + y
+
+        # Checks the number of barriers around our current position
+        
+        barriers_around = 0
+        for dir in range(4):
+            if chess_board[my_pos[0],my_pos[1],dir]== True:
+                barriers_around += 1
+
+        # If there are 3 barriers around us, return 9999
+        if barriers_around ==3:   
+            return 9999  
 
         # If there are 2 barriers around us, it isn't fatal but it's not ideal
         # The heuristic would be slightly higher
