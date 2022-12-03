@@ -314,7 +314,7 @@ class StudentAgent(Agent):
         # If there are 2 barriers around us, it isn't fatal but it's not ideal
         # The heuristic would be slightly higher
         if barriers_around == 2:
-            heuristic = heuristic *200
+            heuristic = heuristic *50
         
 
         return heuristic
