@@ -2,7 +2,7 @@
 from agents.agent import Agent
 from store import register_agent
 import sys
-
+import random
 
 @register_agent("student_agent")
 class StudentAgent(Agent):
@@ -37,48 +37,54 @@ class StudentAgent(Agent):
 
         Please check the sample implementation in agents/random_agent.py or agents/human_agent.py for more details.
         """
-
-        direction = "u"
-        n = len(chess_board[1])
-        adv_x = adv_pos[0]
-        adv_y = adv_pos[1]
-
-        # get distance from us to adv at each possible next move
-        distance_from_adv = [[10000 for x in range(n)] for y in range(n)] 
-        min_distance = 10000
-        best_coordinates = [my_pos[0], my_pos[1]]
-        for r in range(0,n):
-            for c in range(0,n):
-                for dir in ["u","r","d","l"]:
-                    if self.check_valid_step(chess_board,my_pos,(r,c),adv_pos,dir,max_step):
-                        distance = self.heuristic_decisions(chess_board,(r,c),adv_pos)
-                        distance_from_adv[r][c] = distance
-                        if distance < min_distance:
-                            min_distance = distance
-                            best_coordinates[0] = r
-                            best_coordinates[1] = c
+        # Code here
+        my_pos = self.get_position(chess_board, my_pos, adv_pos, max_step)
+        dir = self.get_direction(chess_board, my_pos, adv_pos, max_step, my_pos)
         
-        available_directions = []
-        for dir in ["u","r","d","l"]:
-            if self.check_valid_step(chess_board,my_pos,tuple(best_coordinates),adv_pos,dir,max_step):
-                available_directions.append(dir)
-                my_pos = tuple(best_coordinates)
+        # dummy return
+        return my_pos, dir
+    
+    def get_position(self, chess_board, my_pos, adv_pos, max_step):
+        # 
+        n = chess_board.shape[0]
+        manhattan_dis = [[0 for r in range(n)] for c in range(n)] 
+        min_dis = 9999
+        position = [my_pos[0], my_pos[1]]
+
+        for i in range(0,n):
+            for j in range(0,n):
+                for dir in range(4):
+                    temp_pos = (i,j)
+                    if self.check_valid_step(chess_board,my_pos,temp_pos,adv_pos,dir,max_step):
+                        distance = self.heuristic_decisions(chess_board, temp_pos,adv_pos)
+                        manhattan_dis[i][j] = distance
+                        if distance < min_dis:
+                            min_dis = distance
+                            position[0] = i
+                            position[1] = j
+        return position
+    
+    def get_direction(self, chess_board, my_pos, adv_pos, max_step, position):
+        valid_dir = []
+        for dir in range(4):
+            if self.check_valid_step(chess_board,my_pos,tuple(position),adv_pos,dir,max_step):
+                valid_dir.append(dir)
+                my_pos = tuple(position)
                 break
 
-        # try to determine the best direction to place our barrier
-
-        if adv_x < best_coordinates[0] and "l" in available_directions:
-            direction = "l"
-        elif adv_x > best_coordinates[0] and "r" in available_directions:
-            direction = "r"
-        elif adv_y < best_coordinates[1] and "d" in available_directions:
-            direction = "d"
-        elif adv_y > best_coordinates[1] and "u" in available_directions:
-            direction = "u"
+        # Place the barrier facing the opponent
+        # Randomly choose the direction of the variable if the above is unavailable
+        if adv_pos[1] > position[1] and 0 in valid_dir:
+            dir = 0
+        elif adv_pos[0] > position[0] and 1 in valid_dir:
+            dir = 1
+        elif adv_pos[1] < position[1] and 2 in valid_dir:
+            dir = 2
+        elif adv_pos[0] > position[0] and 3 in valid_dir:
+            dir = 3
         else:
-            direction = available_directions[0] # change this later
-
-        return my_pos, self.dir_map[direction]
+            dir = random.choice(valid_dir )
+        return dir
 
     def check_endgame(self, chess_board, my_pos, adv_pos):
         """
@@ -148,7 +154,6 @@ class StudentAgent(Agent):
         """
         # Endpoint already has barrier or is boarder
         r, c = end_pos
-        barrier_dir = self.dir_map[barrier_dir]
 
         if chess_board[r, c, barrier_dir]:
             return False
@@ -184,31 +189,37 @@ class StudentAgent(Agent):
 
     def heuristic_decisions(self, chess_board, my_pos, adv_pos):
 
-        heuristic = 10000
+        n = chess_board.shape[0]
+        heuristic = 9999
 
         # Determines if the game has ended
         if self.check_endgame(chess_board, my_pos, adv_pos)[0]:
-            return -10000
+            return -9999
         
 
         # Checks the number of barriers around our current position
-        # If a box is forming around us, return 10000
+        # If there are 3 barriers around us, return 9999
         barriers_around = 0
         for dir in range(4):
-            if chess_board[my_pos[0],my_pos[1],dir]:
+            if chess_board[my_pos[0],my_pos[1],dir]== True:
                 barriers_around += 1
-        if barriers_around >=2:   
-            return 10000      
+        if barriers_around >=3:   
+            return 9999    
 
-        # Finds the distance between the my_pos and adv_pos
+        # Finds the Manhattan distance between the my_pos and adv_pos
         x = abs(adv_pos[0] - my_pos[0])
         y = abs(adv_pos[0] - my_pos[1])
         heuristic = x + y
+
+        # If there are 2 barriers around us, it isn't fatal but it's not ideal
+        # The heuristic would be slightly higher
+        if barriers_around == 2:
+            heuristic = heuristic *1.5
         
 
         return heuristic
 
-    def get_steps(self, chess_board, my_pos, adv_pos, max_step):
+    def get_all_steps(self, chess_board, my_pos, adv_pos, max_step):
         """
         Find all steps the agent can reach.
 
@@ -220,7 +231,7 @@ class StudentAgent(Agent):
             Position of the adversary
         """
         # Size of the board, assume always square
-        board_size = len(chess_board[0])
+        board_size = chess_board.shape[0]
 
         # List of valid positions to return
         steps_allowed = []
@@ -236,13 +247,13 @@ class StudentAgent(Agent):
                 # List of directions where a barrier could be valid
                 border_dir = []
                 if i < adv_row:
-                    border_dir.append("r")
+                    border_dir.append(1)
                 elif i > adv_row:
-                    border_dir.append("l")
+                    border_dir.append(3)
                 if j < adv_col:
-                    border_dir.append("u")
+                    border_dir.append(0)
                 elif j > adv_col:
-                    border_dir.append("d")
+                    border_dir.append(2)
                 for dir in border_dir:
                     if self.check_valid_step(chess_board, my_pos, (i, j), adv_pos, dir, max_step):
                         steps_allowed.append(tuple([i, j, self.dir_map[dir]]))
