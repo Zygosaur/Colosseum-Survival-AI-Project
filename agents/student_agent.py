@@ -1,5 +1,4 @@
 # Student agent: Add your own agent here
-import numpy as np
 from agents.agent import Agent
 from store import register_agent
 import sys
@@ -39,25 +38,47 @@ class StudentAgent(Agent):
         Please check the sample implementation in agents/random_agent.py or agents/human_agent.py for more details.
         """
 
-        optimal = -100000000
-        best_move = (my_pos, 0)
-        max_depth = 1
+        direction = "u"
+        n = len(chess_board[1])
+        adv_x = adv_pos[0]
+        adv_y = adv_pos[1]
 
-        steps = self.get_steps(chess_board, my_pos, adv_pos, max_step)
+        # get distance from us to adv at each possible next move
+        distance_from_adv = [[10000 for x in range(n)] for y in range(n)] 
+        min_distance = 10000
+        best_coordinates = [my_pos[0], my_pos[1]]
+        for r in range(0,n):
+            for c in range(0,n):
+                for dir in ["u","r","d","l"]:
+                    if self.check_valid_step(chess_board,my_pos,(r,c),adv_pos,dir,max_step):
+                        distance = self.heuristic_decisions(chess_board,(r,c),adv_pos)
+                        distance_from_adv[r][c] = distance
+                        if distance < min_distance:
+                            min_distance = distance
+                            best_coordinates[0] = r
+                            best_coordinates[1] = c
+        
+        available_directions = []
+        for dir in ["u","r","d","l"]:
+            if self.check_valid_step(chess_board,my_pos,tuple(best_coordinates),adv_pos,dir,max_step):
+                available_directions.append(dir)
+                my_pos = tuple(best_coordinates)
+                break
 
-        for step in steps:
-            chess_board[step[0], step[1], step[2]] = True
+        # try to determine the best direction to place our barrier
 
-            move = self.minimax(chess_board, my_pos, adv_pos,
-                                 0, max_depth, True, max_step, -50000, 50000, 10000)
+        if adv_x < best_coordinates[0] and "l" in available_directions:
+            direction = "l"
+        elif adv_x > best_coordinates[0] and "r" in available_directions:
+            direction = "r"
+        elif adv_y < best_coordinates[1] and "d" in available_directions:
+            direction = "d"
+        elif adv_y > best_coordinates[1] and "u" in available_directions:
+            direction = "u"
+        else:
+            direction = available_directions[0] # change this later
 
-            chess_board[step[0], step[1], step[2]] = False
-
-            if move > optimal:
-                best_move = chess_board[step[0], step[1], step[2]]
-                optimal = move
-
-        return best_move
+        return my_pos, self.dir_map[direction]
 
     def check_endgame(self, chess_board, my_pos, adv_pos):
         """
@@ -104,7 +125,6 @@ class StudentAgent(Agent):
         for r in range(board_size):
             for c in range(board_size):
                 find((r, c))
-        print(my_pos)
         p0_r = find(tuple(my_pos))
         p1_r = find(tuple(adv_pos))
         p0_score = list(father.values()).count(p0_r)
@@ -144,7 +164,7 @@ class StudentAgent(Agent):
             r, c = cur_pos
             if cur_step == max_step:
                 break
-            for dir, move in enumerate(((0, 1), (1, 0), (0, -1), (-1, 0))):
+            for dir, move in enumerate(((-1, 0), (0, 1), (1, 0), (0, -1))):
                 if chess_board[r, c, dir]:
                     continue
 
@@ -170,10 +190,6 @@ class StudentAgent(Agent):
         if self.check_endgame(chess_board, my_pos, adv_pos)[0]:
             return -10000
         
-        # Finds the distance between the my_pos and adv_pos
-        x = abs(adv_pos[0] - my_pos[0])
-        y = abs(adv_pos[0] - my_pos[1])
-        heuristic = x + y
 
         # Checks the number of barriers around our current position
         # If a box is forming around us, return 10000
@@ -182,7 +198,12 @@ class StudentAgent(Agent):
             if chess_board[my_pos[0],my_pos[1],dir]:
                 barriers_around += 1
         if barriers_around >=2:   
-            return 10000       
+            return 10000      
+
+        # Finds the distance between the my_pos and adv_pos
+        x = abs(adv_pos[0] - my_pos[0])
+        y = abs(adv_pos[0] - my_pos[1])
+        heuristic = x + y
         
 
         return heuristic
@@ -283,7 +304,7 @@ class StudentAgent(Agent):
             for step in steps:
                 board[step[0], step[1], step[2]] = True
 
-                best = max(best, self.minimax(board, not max_reached, (step[0], step[1]), adv_pos, (depth + 1), max_depth, max_step, alpha, beta, score_lim))
+                best = max(best, self.minimax(board, (step[0], step[1]), adv_pos, (depth + 1), max_depth, not max_reached, max_step, alpha, beta, score_lim))
 
                 board[step[0], step[1], step[2]] = False
 
@@ -301,8 +322,8 @@ class StudentAgent(Agent):
             for step in steps:
                 board[step[0], step[1], step[2]] = True
 
-                best = min(best, self.minimax(board, not max_reached, (step[0], step[1]), adv_pos, depth+1,
-                                              max_depth, max_step, alpha, beta))
+                best = min(best, self.minimax(board, (step[0], step[1]), adv_pos, depth+1,
+                                              max_depth, not max_reached, max_step, alpha, beta, score_lim))
 
                 board[step[0], step[1], step[2]] = False
 
