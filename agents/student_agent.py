@@ -86,20 +86,20 @@ class StudentAgent(Agent):
             The best position.
         """
         n = chess_board.shape[0]
-        manhattan_dis = [[0 for r in range(n)] for c in range(n)] 
-        min_dis = 9999
+        heuristic = [[0 for r in range(n)] for c in range(n)] 
+        best_heuristic = 9999
         position = [my_pos[0], my_pos[1]]
 
-        #Iterates through the valid steps, checks if they are valid, then gives them a heuristic.
+        #Iterates through all steps, checks if they are valid, then gives them a heuristic.
         for i in range(0,n):
             for j in range(0,n):
                 for dir in range(4):
                     temp_pos = (i,j)
                     if self.check_valid_step(my_pos,temp_pos,adv_pos,chess_board,dir,max_step):
-                        distance = self.heuristic_decisions(chess_board, temp_pos,adv_pos)
-                        manhattan_dis[i][j] = distance
-                        if distance < min_dis:
-                            min_dis = distance
+                        temp_heuristic = self.heuristic_decisions(chess_board, temp_pos,adv_pos)
+                        heuristic[i][j] = temp_heuristic
+                        if temp_heuristic < best_heuristic:
+                            best_heuristic = temp_heuristic
                             position[0] = i
                             position[1] = j
         return position
@@ -270,8 +270,8 @@ class StudentAgent(Agent):
 
     def heuristic_decisions(self, chess_board, my_pos, adv_pos):
         """
-        Determines the heuristic for each move.
-        Smaller heuristics are better in the function. It will be reversed in later.
+        Determines the heuristic for each move. The heuristics range from 0 to 9999.
+        The smaller the heuristic, the better.
 
         Parameters
         ----------
@@ -314,7 +314,7 @@ class StudentAgent(Agent):
         # If there are 2 barriers around us, it isn't fatal but it's not ideal
         # The heuristic would be slightly higher
         if barriers_around == 2:
-            heuristic = heuristic *50
+            heuristic = heuristic *200
         
 
         return heuristic
