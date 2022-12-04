@@ -270,7 +270,7 @@ class StudentAgent(Agent):
 
     def heuristic_decisions(self, chess_board, my_pos, adv_pos):
         """
-        Determines the heuristic for each move. The heuristics range from 0 to 9999.
+        Determines the heuristic for each move. 
         The smaller the heuristic, the better.
 
         Parameters
